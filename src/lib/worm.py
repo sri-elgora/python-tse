@@ -230,7 +230,13 @@ class Worm:
             self.setup()
         if self.info.initializationState == WORM_INIT_UNINITIALIZED:
             log.warning('TSE still not commissioned, calling tse_setup_ext()')
-            self.tse_setup_ext(adminpuk, adminpin, time_admin_pin, enable_autopilot=True)
+            try:
+                self.tse_setup_ext(adminpuk, adminpin, time_admin_pin, enable_autopilot=True)
+            except WormException as e:
+                log.warning('tse_setup_ext() fehlgeschlagen (%s), nutze Legacy tse_setup()', e.message)
+                self.tse_setup(adminpuk, adminpin, time_admin_pin)
+                if not self.info.hasValidTime:
+                    self.tse_updateTime()
         else:
             # TSE bereits eingerichtet – startup helper verwenden
             try:
